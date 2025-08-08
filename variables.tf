@@ -45,12 +45,12 @@ variable "service_port" {
 
 variable "service_cpu" {
   description = "CPU a ser alocada para a tarefa ECS (ex: '1024' para 1 vCPU)."
-  type        = string
+  type        = number
 }
 
 variable "service_memory" {
   description = "Memória a ser alocada para a tarefa ECS em MiB (ex: '2048' para 2GB)."
-  type        = string
+  type        = number
 }
 
 variable "enable_ecr" {
@@ -116,4 +116,14 @@ variable "loadbalancer_listiner" {
 variable "service_url" {
   description = "Lista de URLs (host headers) para a regra do listener do ALB. Ex: ['thanos.example.com']"
   type        = list(string)
+}
+
+variable "min_task" {
+  description = "Quantidade mínima de tasks desejadas"
+  type = number
+}
+
+variable "max_task" {
+  description = "Quantidade máxima de tasks desejadas"
+  type = number
 }
