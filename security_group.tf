@@ -1,6 +1,9 @@
 resource "aws_security_group" "main" {
   name   = "${var.service_name}-security-group"
   vpc_id = var.solidstack_vpc_module ? data.aws_ssm_parameter.vpc[0].value : var.vpc_id
+  tags = {
+    Name = "${var.service_name}-security-group"
+  }
 }
 
 resource "aws_security_group_rule" "ingress" {
