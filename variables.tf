@@ -1,100 +1,106 @@
 variable "region" {
-  description = "Region utilizada para implantar os recursos na AWS"
+  description = "Região da AWS onde os recursos serão implantados."
   type        = string
 }
 
 variable "project_name" {
-  description = "Nome dado ao projeto que será executado. Esse nome será utilizando na construção do name de alguns recursos."
+  description = "Nome do projeto. Usado para nomear recursos e buscar parâmetros no SSM."
   type        = string
 }
 
 variable "solidstack_vpc_module" {
-  description = "Essa condicional é utilizada para especificar se será utilizado o modulo VPC como base. Para utilizar essa funcionalidade é extremamente importante que na utilização dos dois modulos seja utilizar o mesmo valor para a variável 'project_name' "
+  description = "Se true, o módulo usará os recursos (VPC, subnets, etc.) criados pelo módulo VPC da SolidStack, buscando-os no SSM Parameter Store. O 'project_name' deve ser o mesmo em ambos os módulos."
   type        = bool
+  default     = false
 }
 
-
 variable "public_subnets" {
-  description = "Essa variável é utilizada se não for utilizado o modulo de VPC da SolidStack Cloud. Tornando esse modulo reutilizado para ambientes já existentes"
+  description = "Lista de IDs das subnets públicas. Usado apenas se 'solidstack_vpc_module' for false."
   type        = list(string)
   default     = []
 }
 
 variable "privates_subnets" {
-  description = "Essa variável é utilizada se não for utilizado o modulo de VPC da SolidStack Cloud. Tornando esse modulo reutilizado para ambientes já existentes"
+  description = "Lista de IDs das subnets privadas. Usado apenas se 'solidstack_vpc_module' for false."
   type        = list(string)
   default     = []
 }
 
-
-## Variáveis para construção do serviço
+## Variáveis para construção do serviço ECS
 variable "cluster_name" {
-  description = "Essa variável é utilizada se não for utilizado o modulo de VPC da SolidStack Cloud. Tornando esse modulo reutilizado para ambientes já existentes"
+  description = "Nome do cluster ECS onde o serviço será implantado. Usado apenas se 'solidstack_vpc_module' for false."
   type        = string
   default     = ""
 }
 
 variable "service_name" {
-  description = "Nome dado ao ECS service."
+  description = "Nome base para o serviço ECS e recursos associados (ex: task definition, security group)."
   type        = string
 }
 
 variable "service_port" {
-
+  description = "Porta que o contêiner expõe."
+  type        = number
 }
 
 variable "service_cpu" {
-
+  description = "CPU a ser alocada para a tarefa ECS (ex: '1024' para 1 vCPU)."
+  type        = string
 }
 
 variable "service_memory" {
-
+  description = "Memória a ser alocada para a tarefa ECS em MiB (ex: '2048' para 2GB)."
+  type        = string
 }
 
 variable "enable_ecr" {
-
-  default = false
+  description = "Se true, cria um repositório ECR para a imagem do serviço."
+  type        = bool
+  default     = false
 }
+
 variable "docker_image" {
-  type    = string
-  default = ""
+  description = "URL da imagem Docker a ser usada no contêiner. Usado apenas se 'enable_ecr' for false."
+  type        = string
+  default     = ""
 }
 
 variable "environment_variables" {
-  type    = list(any)
-  default = []
+  description = "Lista de variáveis de ambiente para o contêiner. Ex: [{name = 'VAR_NAME', value = 'VAR_VALUE'}]."
+  type        = list(any)
+  default     = []
 }
 
 variable "capabilities" {
-  type    = list(string)
-  default = ["FARGATE"]
-}
-
-variable "target_group_arn" {
-  type    = string
-  default = ""
+  description = "Compatibilidades necessárias para a tarefa. O padrão é 'FARGATE'."
+  type        = list(string)
+  default     = ["FARGATE"]
 }
 
 variable "desired_task" {
-  type = number
+  description = "Número de instâncias da tarefa que o serviço deve manter."
+  type        = number
 }
 
 variable "vpc_id" {
-  type    = string
-  default = ""
+  description = "ID da VPC onde o serviço será implantado. Usado apenas se 'solidstack_vpc_module' for false."
+  type        = string
+  default     = ""
 }
 
 variable "vpc_cidr" {
-  type    = string
-  default = ""
+  description = "Bloco CIDR da VPC. Usado para a regra de entrada do security group. Usado apenas se 'solidstack_vpc_module' for false."
+  type        = string
+  default     = ""
 }
 
 variable "service_healthcheck" {
-  type = map(any)
+  description = "Configurações do health check para o target group. As chaves incluem 'healthy_threshold', 'unhealthy_threshold', 'timeout', 'interval', 'matcher', 'path'."
+  type        = map(any)
   default = {
     healthy_threshold   = 3
     unhealthy_threshold = 3
-    timout              = 10
+    timeout             = 10
     interval            = 60
     matcher             = "200-399"
     path                = "/"
@@ -102,10 +108,12 @@ variable "service_healthcheck" {
 }
 
 variable "loadbalancer_listiner" {
-  type    = string
-  default = ""
+  description = "ARN do listener do Application Load Balancer. Usado apenas se 'solidstack_vpc_module' for false."
+  type        = string
+  default     = ""
 }
 
 variable "service_url" {
-  type = list
+  description = "Lista de URLs (host headers) para a regra do listener do ALB. Ex: ['thanos.example.com']"
+  type        = list(string)
 }

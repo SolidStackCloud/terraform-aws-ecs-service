@@ -4,10 +4,14 @@ resource "aws_ecs_service" "main" {
   task_definition                    = aws_ecs_task_definition.main.arn
   desired_count                      = var.desired_task
   launch_type                        = "FARGATE"
-  propagate_tags                     = "TASK_DEFINITION"
+  propagate_tags                     = "SERVICE"
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 100
   platform_version                   = "LATEST"
+  enable_ecs_managed_tags = true
+  enable_execute_command = true
+  availability_zone_rebalancing = "ENABLED"
+  force_delete = true
   deployment_circuit_breaker {
     enable   = true
     rollback = true
