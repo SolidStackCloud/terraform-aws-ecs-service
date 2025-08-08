@@ -115,14 +115,3 @@ No modules.
 | <a name="input_solidstack_vpc_module"></a> [solidstack\_vpc\_module](#input\_solidstack\_vpc\_module) | Se true, o módulo usará os recursos (VPC, subnets, etc.) criados pelo módulo VPC da SolidStack, buscando-os no SSM Parameter Store. O 'project\_name' deve ser o mesmo em ambos os módulos. | `bool` | `false` | no |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | Bloco CIDR da VPC. Usado para a regra de entrada do security group. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID da VPC onde o serviço será implantado. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| <a name="output_ecr_repository_url"></a> [ecr\_repository\_url](#output\_ecr\_repository\_url) | URL do repositório ECR criado. |
-| <a name="output_security_group_id"></a> [security\_group\_id](#output\_security\_group\_id) | ID do Security Group criado para o serviço. |
-| <a name="output_service_name"></a> [service\_name](#output\_service\_name) | Nome do serviço ECS criado. |
-| <a name="output_target_group_arn"></a> [target\_group\_arn](#output\_target\_group\_arn) | ARN do Target Group criado. |
-| <a name="output_task_definition_arn"></a> [task\_definition\_arn](#output\_task\_definition\_arn) | ARN da definição de tarefa ECS. |
-<!-- END_TF_DOCS -->
