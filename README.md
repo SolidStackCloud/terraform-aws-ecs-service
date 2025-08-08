@@ -12,6 +12,7 @@ Ele é projetado para ser flexível, permitindo a integração com um ambiente d
 - Gerenciamento de IAM Roles e Policies para a execução do serviço e das tarefas.
 - Configuração de Security Group para o serviço.
 - Criação de um Log Group no CloudWatch para os logs do serviço.
+- Suporte para autoscaling do serviço baseado em CPU e Memória.
 
 ## Exemplo de Uso
 
@@ -22,17 +23,20 @@ module "ecs_service" {
   region                  = "us-east-1"
   project_name            = "meu-projeto"
   service_name            = "thanos"
-  solidstack_vpc_module   = true # Utiliza os recursos do módulo VPC
+  solidstack_vpc_module   = true 
 
   # Configurações do Serviço
   service_port            = 8080
-  service_cpu             = "1024"
-  service_memory          = "2048"
-  desired_task            = 2
+  service_cpu             = 1024
+  service_memory          = 2048
+  min_task                = 2
+  max_task                = 10
+  ecs_cpu_utilization     = 70
+  ecs_memory_utilization  = 70
   service_url             = ["thanos.meu-dominio.com"]
 
   # Configurações da Imagem
-  enable_ecr              = true # Habilita o ECR. Se false, use 'docker_image'
+  enable_ecr              = true
 
   # Variáveis de Ambiente (Opcional)
   environment_variables = [
@@ -97,7 +101,6 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_capabilities"></a> [capabilities](#input\_capabilities) | Compatibilidades necessárias para a tarefa. O padrão é 'FARGATE'. | `list(string)` | <pre>[<br>  "FARGATE"<br>]</pre> | no |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Nome do cluster ECS onde o serviço será implantado. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
-| <a name="input_desired_task"></a> [desired\_task](#input\_desired\_task) | Número de instâncias da tarefa que o serviço deve manter. | `number` | n/a | yes |
 | <a name="input_docker_image"></a> [docker\_image](#input\_docker\_image) | URL da imagem Docker a ser usada no contêiner. Usado apenas se 'enable\_ecr' for false. | `string` | `""` | no |
 | <a name="input_enable_ecr"></a> [enable\_ecr](#input\_enable\_ecr) | Se true, cria um repositório ECR para a imagem do serviço. | `bool` | `false` | no |
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Lista de variáveis de ambiente para o contêiner. Ex: [{name = 'VAR\_NAME', value = 'VAR\_VALUE'}]. | `list(any)` | `[]` | no |
@@ -115,3 +118,8 @@ No modules.
 | <a name="input_solidstack_vpc_module"></a> [solidstack\_vpc\_module](#input\_solidstack\_vpc\_module) | Se true, o módulo usará os recursos (VPC, subnets, etc.) criados pelo módulo VPC da SolidStack, buscando-os no SSM Parameter Store. O 'project\_name' deve ser o mesmo em ambos os módulos. | `bool` | `false` | no |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | Bloco CIDR da VPC. Usado para a regra de entrada do security group. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID da VPC onde o serviço será implantado. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
+| <a name="input_min_task"></a> [min\_task](#input\_min\_task) | Quantidade mínima de tasks desejadas | `number` | n/a | yes |
+| <a name="input_max_task"></a> [max\_task](#input\_max\_task) | Quantidade máxima de tasks desejadas | `number` | n/a | yes |
+| <a name="input_ecs_cpu_utilization"></a> [ecs\_cpu\_utilization](#input\_ecs\_cpu\_utilization) | Percentual de CPU especificado para scaling do service. | `number` | n/a | yes |
+| <a name="input_ecs_memory_utilization"></a> [ecs\_memory\_utilization](#input\_ecs\_memory\_utilization) | Percentual de memória especificado para scaling do service. | `number` | n/a | yes |
+<!-- END_TF_DOCS -->

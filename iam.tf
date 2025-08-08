@@ -248,6 +248,11 @@ resource "aws_iam_role_policy_attachment" "service_role" {
   policy_arn = aws_iam_policy.service_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "service_autoscaling_role" {
+  role       = aws_iam_role.service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole"
+}
+
 ## Task Execution Role
 
 

@@ -127,3 +127,13 @@ variable "max_task" {
   description = "Quantidade máxima de tasks desejadas"
   type = number
 }
+
+variable "ecs_cpu_utilization" {
+  description = "Percentual de CPU especificado para scaling do service."
+  type = number
+}
+
+variable "ecs_memory_utilization" {
+  description = "Percentual de memória especificado para scaling do service."
+  type = number
+}
