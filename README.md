@@ -18,7 +18,7 @@ Ele é projetado para ser flexível, permitindo a integração com um ambiente d
 
 ```hcl
 module "ecs_service" {
-  source = "./terraform-aws-eks-thanos-cluster"
+  source = ""
 
   region                  = "us-east-1"
   project_name            = "meu-projeto"
@@ -38,7 +38,7 @@ module "ecs_service" {
   # Configurações da Imagem
   enable_ecr              = true
 
-  # Variáveis de Ambiente (Opcional)
+  # Variáveis de Ambiente (Exemplo)
   environment_variables = [
     {
       name  = "DB_HOST",
@@ -46,7 +46,7 @@ module "ecs_service" {
     }
   ]
 
-  # Health Check (Opcional)
+  # Health Check (Exemplo)
   service_healthcheck = {
     path = "/health"
   }
@@ -56,17 +56,10 @@ module "ecs_service" {
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
-
-## Providers
-
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.7.0 |
 
-## Modules
-
-No modules.
 
 ## Resources
 
