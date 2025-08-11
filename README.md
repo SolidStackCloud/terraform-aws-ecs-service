@@ -29,6 +29,7 @@ module "ecs_service" {
   service_port            = 8080
   service_cpu             = 1024
   service_memory          = 2048
+  desired_task            = 1
   min_task                = 2
   max_task                = 10
   ecs_cpu_utilization     = 70
@@ -111,6 +112,7 @@ module "ecs_service" {
 | <a name="input_solidstack_vpc_module"></a> [solidstack\_vpc\_module](#input\_solidstack\_vpc\_module) | Se true, o módulo usará os recursos (VPC, subnets, etc.) criados pelo módulo VPC da SolidStack, buscando-os no SSM Parameter Store. O 'project\_name' deve ser o mesmo em ambos os módulos. | `bool` | `false` | no |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | Bloco CIDR da VPC. Usado para a regra de entrada do security group. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID da VPC onde o serviço será implantado. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
+| <a name="input_desired_task"></a> [desired\_task](#input\_desired\_task) | Quantidade de tasks desejadas | `number` | n/a | yes |
 | <a name="input_min_task"></a> [min\_task](#input\_min\_task) | Quantidade mínima de tasks desejadas | `number` | n/a | yes |
 | <a name="input_max_task"></a> [max\_task](#input\_max\_task) | Quantidade máxima de tasks desejadas | `number` | n/a | yes |
 | <a name="input_ecs_cpu_utilization"></a> [ecs\_cpu\_utilization](#input\_ecs\_cpu\_utilization) | Percentual de CPU especificado para scaling do service. | `number` | n/a | yes |
