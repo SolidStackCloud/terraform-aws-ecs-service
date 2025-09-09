@@ -31,7 +31,7 @@ resource "aws_ecs_task_definition" "main" {
       environment = var.environment_variables
     }
   ])
-
+  
   tags = {
     Name = "${var.service_name}-task-definition"
   }

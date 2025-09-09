@@ -15,7 +15,7 @@ data "aws_ssm_parameter" "public_subnet" {
 
 data "aws_ssm_parameter" "loadbalancer_listiner" {
   count = var.solidstack_vpc_module ? 1 : 0
-  name  = "/${var.project_name}/loadbalance"
+  name  = "/${var.project_name}/loadbalance_listiner"
 }
 
 data "aws_ssm_parameter" "cluster" {
@@ -23,7 +23,7 @@ data "aws_ssm_parameter" "cluster" {
   name  = "/${var.project_name}/cluster-name"
 }
 
-data "aws_ssm_parameter" "vpc_cidr" {
+data "aws_vpc" "vpc" {
   count = var.solidstack_vpc_module ? 1 : 0
-  name  = "/${var.project_name}/vpc_cidr"
+  id = data.aws_ssm_parameter.vpc[0].value
 }

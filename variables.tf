@@ -137,3 +137,22 @@ variable "ecs_memory_utilization" {
   description = "Percentual de memória especificado para scaling do service."
   type = number
 }
+
+variable "cloudwatch_retention_days" {
+  description = "Valor para configurar a quantidade em dias de retenção de logs no cloudwatch"
+  type = number
+  default = 90
+}
+
+variable "task_execution_policy_actions" {
+  description = "Lista de permissões para task execution role"
+  type = list(string)
+  default = [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchGetImage",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+  ]
+}

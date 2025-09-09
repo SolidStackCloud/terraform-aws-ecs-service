@@ -262,7 +262,7 @@ resource "aws_iam_role" "task_execution_role" {
 }
 
 resource "aws_iam_policy" "task_execution_policy" {
-  name = "${var.service_name}-task-exeution-policy"
+  name = "${var.service_name}-task-execution-policy"
 
   policy = jsonencode(
     {
@@ -270,14 +270,7 @@ resource "aws_iam_policy" "task_execution_policy" {
       "Statement" : [
         {
           "Effect" : "Allow",
-          "Action" : [
-            "ecr:GetAuthorizationToken",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:BatchGetImage",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-          ],
+          "Action" : var.task_execution_policy_actions,
           "Resource" : "*"
         }
       ]
