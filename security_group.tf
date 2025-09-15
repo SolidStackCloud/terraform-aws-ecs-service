@@ -1,6 +1,6 @@
 resource "aws_security_group" "main" {
   name   = "${var.service_name}-security-group"
-  vpc_id = var.solidstack_vpc_module ? data.aws_ssm_parameter.vpc[0].value : var.vpc_id
+  vpc_id = var.vpc_id
   tags = {
     Name = "${var.service_name}-security-group"
   }
@@ -11,7 +11,7 @@ resource "aws_security_group_rule" "ingress" {
   from_port         = var.service_port
   to_port           = var.service_port
   protocol          = "-1"
-  cidr_blocks       = [var.solidstack_vpc_module ? data.aws_vpc.vpc[0].cidr_block : var.vpc_cidr]
+  cidr_blocks       = var.vpc_cidr
   security_group_id = aws_security_group.main.id
 }
 

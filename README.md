@@ -1,120 +1,151 @@
-# Módulo Terraform para Serviço ECS na AWS
+# Módulo Terraform - ECS Service
 
-Este módulo do Terraform provisiona um serviço completo no Amazon Elastic Container Service (ECS) usando o AWS Fargate.
+Este módulo Terraform cria um serviço ECS completo com todos os recursos necessários para executar uma aplicação containerizada na AWS.
 
-Ele é projetado para ser flexível, permitindo a integração com um ambiente de VPC existente ou utilizando os recursos criados pelo módulo [SolidStack VPC](https://github.com/seu-usuario/terraform-aws-solidstack-vpc) através do AWS Systems Manager Parameter Store.
+## Recursos Criados
 
-## Funcionalidades
+- **ECS Service** e Task Definition
+- **Application Load Balancer** Target Group e Listener Rule
+- **Security Group** para o serviço
+- **IAM Roles** (Task Execution e Task Role)
+- **CloudWatch Log Group**
+- **Auto Scaling** configurado por CPU e memória
+- **ECR Repository** (opcional)
+- **Route53 Record** (opcional)
+- **EFS Mount** (opcional)
 
-- Criação de um serviço ECS com AWS Fargate.
-- Suporte para integração com Application Load Balancer (ALB).
-- Criação opcional de um repositório Amazon ECR.
-- Gerenciamento de IAM Roles e Policies para a execução do serviço e das tarefas.
-- Configuração de Security Group para o serviço.
-- Criação de um Log Group no CloudWatch para os logs do serviço.
-- Suporte para autoscaling do serviço baseado em CPU e Memória.
-
-## Exemplo de Uso
+## Uso Básico
 
 ```hcl
 module "ecs_service" {
-  source = ""
+  source = "./modules/service"
 
-  region                  = "us-east-1"
-  project_name            = "meu-projeto"
-  service_name            = "thanos"
-  solidstack_vpc_module   = true 
-
-  # Configurações do Serviço
-  service_port            = 8080
-  service_cpu             = 1024
-  service_memory          = 2048
-  desired_task            = 1
-  min_task                = 2
+  # Configurações básicas
+  region       = "us-east-1"
+  project_name = "meu-projeto"
+  
+  # Rede
+  vpc_id            = "vpc-12345678"
+  vpc_cidr          = ["10.0.0.0/16"]
+  privates_subnets  = ["subnet-12345678", "subnet-87654321"]
+  
+  # ECS
+  cluster_name = "meu-cluster"
+  service_name = "minha-aplicacao"
+  service_port = 8080
+  
+  # Recursos
+  service_cpu    = 512
+  service_memory = 1024
+  desired_task   = 2
+  
+  # Auto Scaling
+  min_task                = 1
   max_task                = 10
   ecs_cpu_utilization     = 70
-  ecs_memory_utilization  = 70
-  service_url             = ["thanos.meu-dominio.com"]
+  ecs_memory_utilization  = 80
+  
+  # Load Balancer
+  loadbalancer_listiner = "arn:aws:elasticloadbalancing:us-east-1:123456789012:listener/app/my-alb/1234567890123456/1234567890123456"
+  service_url           = ["app.exemplo.com"]
+  
+  # Imagem Docker
+  docker_image = "nginx:latest"
+}
+```
 
-  # Configurações da Imagem
-  enable_ecr              = true
+## Variáveis Obrigatórias
 
-  # Variáveis de Ambiente (Exemplo)
-  environment_variables = [
+| Nome | Tipo | Descrição |
+|------|------|-----------|
+| `region` | string | Região AWS |
+| `project_name` | string | Nome do projeto |
+| `privates_subnets` | list(string) | IDs das subnets privadas |
+| `cluster_name` | string | Nome do cluster ECS |
+| `service_name` | string | Nome do serviço |
+| `service_port` | number | Porta do container |
+| `service_cpu` | number | CPU da task (ex: 512) |
+| `service_memory` | number | Memória da task em MiB (ex: 1024) |
+| `desired_task` | number | Número de tasks desejadas |
+| `vpc_id` | string | ID da VPC |
+| `vpc_cidr` | list(string) | CIDR da VPC |
+| `loadbalancer_listiner` | string | ARN do listener do ALB |
+| `service_url` | list(string) | URLs para o serviço |
+| `min_task` | number | Mínimo de tasks |
+| `max_task` | number | Máximo de tasks |
+| `ecs_cpu_utilization` | number | % CPU para scaling |
+| `ecs_memory_utilization` | number | % memória para scaling |
+
+## Variáveis Opcionais
+
+| Nome | Padrão | Descrição |
+|------|--------|-----------|
+| `enable_ecr` | false | Criar repositório ECR |
+| `docker_image` | "" | Imagem Docker (se ECR desabilitado) |
+| `environment_variables` | [] | Variáveis de ambiente |
+| `capabilities` | ["FARGATE"] | Compatibilidades da task |
+| `cloudwatch_retention_days` | 90 | Retenção de logs |
+| `route53_anable` | false | Criar registro Route53 |
+| `zone_id` | "" | ID da zona Route53 |
+
+## Exemplo com ECR
+
+```hcl
+module "ecs_service" {
+  source = "./modules/service"
+  
+  # ... outras configurações ...
+  
+  enable_ecr = true
+  # docker_image não é necessário quando enable_ecr = true
+}
+```
+
+## Exemplo com EFS
+
+```hcl
+module "ecs_service" {
+  source = "./modules/service"
+  
+  # ... outras configurações ...
+  
+  efs = {
+    enabled          = true
+    efs_id          = "fs-12345678"
+    efs_access_point = "fsap-12345678"
+  }
+  
+  mountPoints = [
     {
-      name  = "DB_HOST",
-      value = "db.example.com"
+      containerPath = "/data"
+      readOnly      = false
     }
   ]
+}
+```
 
-  # Health Check (Exemplo)
+## Health Check Personalizado
+
+```hcl
+module "ecs_service" {
+  source = "./modules/service"
+  
+  # ... outras configurações ...
+  
   service_healthcheck = {
-    path = "/health"
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
+    timeout            = 5
+    interval           = 30
+    matcher            = "200"
+    path               = "/health"
   }
 }
 ```
 
-<!-- BEGIN_TF_DOCS -->
-## Requirements
+## Pré-requisitos
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.7.0 |
-
-
-## Resources
-
-| Name | Type |
-|------|------|
-| [aws_alb_listener_rule.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/alb_listener_rule) | resource |
-| [aws_alb_target_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/alb_target_group) | resource |
-| [aws_cloudwatch_log_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_ecr_repository.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository) | resource |
-| [aws_ecs_service.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service) | resource |
-| [aws_ecs_task_definition.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition) | resource |
-| [aws_iam_policy.service_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
-| [aws_iam_policy.task_execution_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
-| [aws_iam_role.service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role.task_execution_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy_attachment.service_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_iam_role_policy_attachment.task_execution_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_security_group.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
-| [aws_security_group_rule.allow_all](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
-| [aws_security_group_rule.ingress](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
-| [aws_iam_policy_document.assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_ssm_parameter.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
-| [aws_ssm_parameter.loadbalancer_listiner](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
-| [aws_ssm_parameter.private_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
-| [aws_ssm_parameter.public_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
-| [aws_ssm_parameter.vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
-| [aws_ssm_parameter.vpc_cidr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_capabilities"></a> [capabilities](#input\_capabilities) | Compatibilidades necessárias para a tarefa. O padrão é 'FARGATE'. | `list(string)` | <pre>[<br>  "FARGATE"<br>]</pre> | no |
-| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Nome do cluster ECS onde o serviço será implantado. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
-| <a name="input_docker_image"></a> [docker\_image](#input\_docker\_image) | URL da imagem Docker a ser usada no contêiner. Usado apenas se 'enable\_ecr' for false. | `string` | `""` | no |
-| <a name="input_enable_ecr"></a> [enable\_ecr](#input\_enable\_ecr) | Se true, cria um repositório ECR para a imagem do serviço. | `bool` | `false` | no |
-| <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Lista de variáveis de ambiente para o contêiner. Ex: [{name = 'VAR\_NAME', value = 'VAR\_VALUE'}]. | `list(any)` | `[]` | no |
-| <a name="input_loadbalancer_listiner"></a> [loadbalancer\_listiner](#input\_loadbalancer\_listiner) | ARN do listener do Application Load Balancer. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
-| <a name="input_privates_subnets"></a> [privates\_subnets](#input\_privates\_subnets) | Lista de IDs das subnets privadas. Usado apenas se 'solidstack\_vpc\_module' for false. | `list(string)` | `[]` | no |
-| <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Nome do projeto. Usado para nomear recursos e buscar parâmetros no SSM. | `string` | n/a | yes |
-| <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | Lista de IDs das subnets públicas. Usado apenas se 'solidstack\_vpc\_module' for false. | `list(string)` | `[]` | no |
-| <a name="input_region"></a> [region](#input\_region) | Região da AWS onde os recursos serão implantados. | `string` | n/a | yes |
-| <a name="input_service_cpu"></a> [service\_cpu](#input\_service\_cpu) | CPU a ser alocada para a tarefa ECS (ex: '1024' para 1 vCPU). | `string` | n/a | yes |
-| <a name="input_service_healthcheck"></a> [service\_healthcheck](#input\_service\_healthcheck) | Configurações do health check para o target group. As chaves incluem 'healthy\_threshold', 'unhealthy\_threshold', 'timeout', 'interval', 'matcher', 'path'. | `map(any)` | <pre>{<br>  "healthy_threshold": 3,<br>  "interval": 60,<br>  "matcher": "200-399",<br>  "path": "/",<br>  "timeout": 10,<br>  "unhealthy_threshold": 3<br>}</pre> | no |
-| <a name="input_service_memory"></a> [service\_memory](#input\_service\_memory) | Memória a ser alocada para a tarefa ECS em MiB (ex: '2048' para 2GB). | `string` | n/a | yes |
-| <a name="input_service_name"></a> [service\_name](#input\_service\_name) | Nome base para o serviço ECS e recursos associados (ex: task definition, security group). | `string` | n/a | yes |
-| <a name="input_service_port"></a> [service\_port](#input\_service\_port) | Porta que o contêiner expõe. | `number` | n/a | yes |
-| <a name="input_service_url"></a> [service\_url](#input\_service\_url) | Lista de URLs (host headers) para a regra do listener do ALB. Ex: ['thanos.example.com'] | `list(string)` | n/a | yes |
-| <a name="input_solidstack_vpc_module"></a> [solidstack\_vpc\_module](#input\_solidstack\_vpc\_module) | Se true, o módulo usará os recursos (VPC, subnets, etc.) criados pelo módulo VPC da SolidStack, buscando-os no SSM Parameter Store. O 'project\_name' deve ser o mesmo em ambos os módulos. | `bool` | `false` | no |
-| <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | Bloco CIDR da VPC. Usado para a regra de entrada do security group. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID da VPC onde o serviço será implantado. Usado apenas se 'solidstack\_vpc\_module' for false. | `string` | `""` | no |
-| <a name="input_desired_task"></a> [desired\_task](#input\_desired\_task) | Quantidade de tasks desejadas | `number` | n/a | yes |
-| <a name="input_min_task"></a> [min\_task](#input\_min\_task) | Quantidade mínima de tasks desejadas | `number` | n/a | yes |
-| <a name="input_max_task"></a> [max\_task](#input\_max\_task) | Quantidade máxima de tasks desejadas | `number` | n/a | yes |
-| <a name="input_ecs_cpu_utilization"></a> [ecs\_cpu\_utilization](#input\_ecs\_cpu\_utilization) | Percentual de CPU especificado para scaling do service. | `number` | n/a | yes |
-| <a name="input_ecs_memory_utilization"></a> [ecs\_memory\_utilization](#input\_ecs\_memory\_utilization) | Percentual de memória especificado para scaling do service. | `number` | n/a | yes |
-<!-- END_TF_DOCS -->
+- Cluster ECS existente
+- VPC e subnets configuradas
+- Application Load Balancer com listener configurado
+- Permissões IAM adequadas para criar os recursos

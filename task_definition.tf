@@ -13,6 +13,13 @@ resource "aws_ecs_task_definition" "main" {
       cpu       = var.service_cpu
       memory    = var.service_memory
       essential = true
+      mountPoints = var.efs.enabled == true ? [
+        for i in var.mountPoints : {
+          sourceVolume  = "${var.service_name}-volume"
+          containerPath = i.containerPath
+        
+        } 
+      ] : []
       portMappings = [
         {
           containerPort = var.service_port
@@ -31,8 +38,21 @@ resource "aws_ecs_task_definition" "main" {
       environment = var.environment_variables
     }
   ])
-  
-  tags = {
-    Name = "${var.service_name}-task-definition"
+
+  dynamic "volume" {
+    for_each = var.efs.enabled == true ? var.efs : {}
+    content {
+      name = "${var.service_name}-volume"
+      efs_volume_configuration {
+        file_system_id     = var.efs.efs_id
+        transit_encryption = "ENABLED"
+        root_directory          = var.efs.root_directory
+        authorization_config {
+          access_point_id = var.efs.efs_access_point
+          iam             = "ENABLED"
+        }
+      }
+    }
   }
+
 }

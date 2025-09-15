@@ -1,5 +1,5 @@
 resource "aws_alb_listener_rule" "main" {
-  listener_arn = var.solidstack_vpc_module ? data.aws_ssm_parameter.loadbalancer_listiner[0].value : var.loadbalancer_listiner
+  listener_arn = var.loadbalancer_listiner
 
   action {
     type             = "forward"

@@ -8,12 +8,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "solidstack_vpc_module" {
-  description = "Se true, o módulo usará os recursos (VPC, subnets, etc.) criados pelo módulo VPC da SolidStack, buscando-os no SSM Parameter Store. O 'project_name' deve ser o mesmo em ambos os módulos."
-  type        = bool
-  default     = false
-}
-
 variable "public_subnets" {
   description = "Lista de IDs das subnets públicas. Usado apenas se 'solidstack_vpc_module' for false."
   type        = list(string)
@@ -23,14 +17,12 @@ variable "public_subnets" {
 variable "privates_subnets" {
   description = "Lista de IDs das subnets privadas. Usado apenas se 'solidstack_vpc_module' for false."
   type        = list(string)
-  default     = []
 }
 
 ## Variáveis para construção do serviço ECS
 variable "cluster_name" {
   description = "Nome do cluster ECS onde o serviço será implantado. Usado apenas se 'solidstack_vpc_module' for false."
   type        = string
-  default     = ""
 }
 
 variable "service_name" {
@@ -67,7 +59,7 @@ variable "docker_image" {
 
 variable "environment_variables" {
   description = "Lista de variáveis de ambiente para o contêiner. Ex: [{name = 'VAR_NAME', value = 'VAR_VALUE'}]."
-  type        = list(any)
+  type        = list(map(any))
   default     = []
 }
 
@@ -85,18 +77,26 @@ variable "desired_task" {
 variable "vpc_id" {
   description = "ID da VPC onde o serviço será implantado. Usado apenas se 'solidstack_vpc_module' for false."
   type        = string
-  default     = ""
+
 }
 
 variable "vpc_cidr" {
   description = "Bloco CIDR da VPC. Usado para a regra de entrada do security group. Usado apenas se 'solidstack_vpc_module' for false."
-  type        = string
-  default     = ""
+  type        = list(string)
 }
 
 variable "service_healthcheck" {
   description = "Configurações do health check para o target group. As chaves incluem 'healthy_threshold', 'unhealthy_threshold', 'timeout', 'interval', 'matcher', 'path'."
-  type        = map(any)
+  type = object(
+    {
+      healthy_threshold   = number
+      unhealthy_threshold = number
+      timeout             = number
+      interval            = number
+      matcher             = string
+      path                = string
+    }
+  )
   default = {
     healthy_threshold   = 3
     unhealthy_threshold = 3
@@ -110,7 +110,6 @@ variable "service_healthcheck" {
 variable "loadbalancer_listiner" {
   description = "ARN do listener do Application Load Balancer. Usado apenas se 'solidstack_vpc_module' for false."
   type        = string
-  default     = ""
 }
 
 variable "service_url" {
@@ -120,39 +119,76 @@ variable "service_url" {
 
 variable "min_task" {
   description = "Quantidade mínima de tasks desejadas"
-  type = number
+  type        = number
 }
 
 variable "max_task" {
   description = "Quantidade máxima de tasks desejadas"
-  type = number
+  type        = number
 }
 
 variable "ecs_cpu_utilization" {
   description = "Percentual de CPU especificado para scaling do service."
-  type = number
+  type        = number
 }
 
 variable "ecs_memory_utilization" {
   description = "Percentual de memória especificado para scaling do service."
-  type = number
+  type        = number
 }
 
 variable "cloudwatch_retention_days" {
   description = "Valor para configurar a quantidade em dias de retenção de logs no cloudwatch"
-  type = number
-  default = 90
+  type        = number
+  default     = 90
 }
 
 variable "task_execution_policy_actions" {
   description = "Lista de permissões para task execution role"
-  type = list(string)
+  type        = list(string)
   default = [
-            "ecr:GetAuthorizationToken",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:BatchGetImage",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
+    "ecr:GetAuthorizationToken",
+    "ecr:BatchCheckLayerAvailability",
+    "ecr:GetDownloadUrlForLayer",
+    "ecr:BatchGetImage",
+    "logs:CreateLogStream",
+    "logs:PutLogEvents"
   ]
+}
+## Route53
+
+variable "route53_anable" {
+  description = "Se true, cria um registro Route53 para o serviço."
+  type        = bool
+  default     = false
+}
+
+variable "zone_id" {
+  description = "Especificar o Route53 Hosted zone ID"
+  type        = string
+  default     = ""
+}
+
+variable "efs" {
+  description = "Habilitar e configurar o EFS"
+  type = object({
+    enabled = bool
+    efs_id = string
+    root_directory = optional(string)
+    efs_access_point = string
+  })
+  default = {
+    enabled = false
+    efs_id = ""
+    root_directory = ""
+    efs_access_point = ""
+  }
+}
+
+variable "mountPoints" {
+  type = list(object({
+    containerPath = string
+    readOnly = optional(bool)
+  }))
+  default = []
 }
