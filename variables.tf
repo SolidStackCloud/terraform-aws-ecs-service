@@ -192,3 +192,13 @@ variable "mountPoints" {
   }))
   default = []
 }
+
+variable "capacity_provider_strategy" {
+  description = "Lista de estratégias de capacity providers para o serviço ECS."
+  type = list(object({
+    capacity_provider = string            
+    base              = optional(number)  
+    weight            = optional(number)  
+  }))
+  default = []
+}

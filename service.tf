@@ -3,7 +3,6 @@ resource "aws_ecs_service" "main" {
   cluster                            = var.cluster_name
   task_definition                    = aws_ecs_task_definition.main.arn
   desired_count                      = var.desired_task
-  launch_type                        = "FARGATE"
   propagate_tags                     = "SERVICE"
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 100
@@ -12,6 +11,18 @@ resource "aws_ecs_service" "main" {
   enable_execute_command             = true
   availability_zone_rebalancing      = "ENABLED"
   force_delete                       = true
+  launch_type                        = length(var.capacity_provider_strategy) == 0 ? "FARGATE" : null
+
+  dynamic "capacity_provider_strategy" {
+    for_each = var.capacity_provider_strategy
+    content {
+      capacity_provider = capacity_provider_strategy.value.capacity_provider
+      base              = try(capacity_provider_strategy.value.base, null)
+      weight            = try(capacity_provider_strategy.value.weight, 1)
+    }
+  }
+
+
   deployment_circuit_breaker {
     enable   = true
     rollback = true
